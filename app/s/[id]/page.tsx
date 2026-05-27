@@ -82,7 +82,7 @@ export default async function SentencePage({ params }: Props) {
                 {r.profiles?.display_name || r.profiles?.username}
               </Link>
             </div>
-            <p className="text-gray-800 leading-relaxed">{r.content}</p>
+            <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{r.content}</p>
           </div>
         ))}
       </div>
