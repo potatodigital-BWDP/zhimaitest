@@ -27,6 +27,9 @@ export type Response = {
   response_type: 'extend' | 'challenge' | 'echo'
   created_at: string
   profiles?: Profile
+  parent_response_id?: string | null
+  quote?: string | null
+  replies?: Response[]
 }
 
 export type Save = {

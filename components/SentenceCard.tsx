@@ -1,6 +1,18 @@
 import Link from 'next/link'
 import type { Sentence } from '@/lib/types'
 
+function formatDate(iso: string) {
+  const d = new Date(iso)
+  const parts = new Intl.DateTimeFormat('zh-TW', {
+    timeZone: 'Asia/Taipei',
+    year: 'numeric', month: 'numeric', day: 'numeric',
+    hour: '2-digit', minute: '2-digit',
+    hour12: false, timeZoneName: 'short',
+  }).formatToParts(d)
+  const get = (t: string) => parts.find(p => p.type === t)?.value ?? ''
+  return `${get('year')}年${get('month')}月${get('day')}日 ${get('hour')}:${get('minute')} ${get('timeZoneName')}`
+}
+
 const RESPONSE_TYPE_LABELS = { extend: '延伸', challenge: '反駁', echo: '共鳴' }
 
 type Props = { sentence: Sentence; counts?: { extend: number; challenge: number; echo: number } }
@@ -33,6 +45,7 @@ export default function SentenceCard({ sentence, counts }: Props) {
               {sentence.profiles.display_name || sentence.profiles.username}
             </Link>
           )}
+          <span>{formatDate(sentence.created_at)}</span>
         </div>
 
         {counts && (

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import ResponseSection from './ResponseSection'
+import type { Response } from '@/lib/types'
 
 type Props = { params: Promise<{ id: string }> }
 
@@ -19,11 +20,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-const TYPE_LABELS = { extend: '延伸', challenge: '反駁', echo: '共鳴' }
-const TYPE_COLORS = {
-  extend: 'text-blue-600 bg-blue-50',
-  challenge: 'text-red-600 bg-red-50',
-  echo: 'text-green-600 bg-green-50',
+function buildTree(flat: Response[]): Response[] {
+  const map = new Map<string, Response>()
+  flat.forEach(r => map.set(r.id, { ...r, replies: [] }))
+  const roots: Response[] = []
+  map.forEach(r => {
+    if (r.parent_response_id) {
+      map.get(r.parent_response_id)?.replies?.push(r)
+    } else {
+      roots.push(r)
+    }
+  })
+  return roots
 }
 
 export default async function SentencePage({ params }: Props) {
@@ -38,13 +46,15 @@ export default async function SentencePage({ params }: Props) {
 
   if (!sentence) notFound()
 
-  const { data: responses } = await supabase
+  const { data: flatResponses } = await supabase
     .from('responses')
     .select('*, profiles(id, username, display_name)')
     .eq('sentence_id', id)
     .order('created_at', { ascending: true })
 
   const { data: { user } } = await supabase.auth.getUser()
+
+  const responses = buildTree((flatResponses ?? []) as Response[])
 
   return (
     <div>
@@ -71,23 +81,7 @@ export default async function SentencePage({ params }: Props) {
         </div>
       </article>
 
-      <div className="mb-8">
-        {(responses ?? []).map((r) => (
-          <div key={r.id} className="py-4 border-b border-gray-100">
-            <div className="flex items-center gap-2 mb-2">
-              <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${TYPE_COLORS[r.response_type as keyof typeof TYPE_COLORS]}`}>
-                {TYPE_LABELS[r.response_type as keyof typeof TYPE_LABELS]}
-              </span>
-              <Link href={`/u/${r.profiles?.username}`} className="text-sm text-gray-400 hover:text-gray-700">
-                {r.profiles?.display_name || r.profiles?.username}
-              </Link>
-            </div>
-            <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{r.content}</p>
-          </div>
-        ))}
-      </div>
-
-      <ResponseSection sentenceId={id} user={user} />
+      <ResponseSection sentenceId={id} user={user} responses={responses} />
     </div>
   )
 }

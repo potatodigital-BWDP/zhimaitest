@@ -9,8 +9,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="zh-TW">
-      <body className="bg-white text-gray-900 min-h-screen">
+    <html lang="zh-TW" suppressHydrationWarning>
+      <body className="bg-white text-gray-900 min-h-screen" suppressHydrationWarning>
         <NavBar />
         <main className="max-w-2xl mx-auto px-4 py-8">{children}</main>
       </body>
